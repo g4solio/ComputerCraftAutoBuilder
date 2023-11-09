@@ -44,11 +44,18 @@ Building = {PortionArray = {}}
 
 
 local settings = 
-{
+{     
+    position = {},
     useMultipleTurtles = false,
     turtleStatusRefreshRateSeconds = 10,
-    rednetSide = "right"
+    rednetSide = "right",
+    redNetId = 0
 }
+
+function Init()
+    local x, y, z = gps.locate()
+    settings.position = vector.new(x,y,z)
+end
 --TODO(DG): Build Init, like opening rednet connection
 
 
@@ -56,7 +63,7 @@ function Build(building)
     for portionIndex, portionValue in building.PortionArray do
         for layerIndex, layerValue in portionValue.LayerArray do
             local workerTurtle = FindTurtleForJob()
-            workerTurtle.StartWork(layerValue, layerIndex)
+            workerTurtle:StartWork(layerValue, layerIndex)
         end
     end
 end
@@ -84,14 +91,18 @@ end
 
 function Turtle:ISWorking()
     rednet.send(self.id, messageTable.status)
-    while not senderId == self.id do
+    while not senderId == settings.redNetId do
         local senderId, message, protocol = rednet.receive()
     end
     return message == "unassined"
 end
 
 function Turtle:StartWork(layout, layoutIndex)
-    rednet.send(self.id, {  }) --TODO(DG): realize connection with turtle
+    rednet.send(self.id, self:BuildTurtlePayload()) --TODO(DG): realize connection with turtle
+end
+
+function Turtle:BuildTurtlePayload()
+         
 end
 
 local turtles = 
