@@ -46,6 +46,7 @@ function Work()
             position.x = position.x + size - key - 1
             MoveToLocation()
             Face(RIGHT)
+            turtle.dig()
             turtle.placeDown()     
         end
     end      
