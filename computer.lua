@@ -56,7 +56,6 @@ function Init()
     local x, y, z = gps.locate()
     settings.position = vector.new(x,y,z)
 end
---TODO(DG): Build Init, like opening rednet connection
 
 
 function Build(building)
@@ -98,11 +97,15 @@ function Turtle:ISWorking()
 end
 
 function Turtle:StartWork(layout, layoutIndex)
-    rednet.send(self.id, self:BuildTurtlePayload()) --TODO(DG): realize connection with turtle
+    rednet.send(self.id, self:BuildTurtlePayload(layout, layoutIndex)) --TODO(DG): realize connection with turtle
 end
 
-function Turtle:BuildTurtlePayload()
-         
+function Turtle:BuildTurtlePayload(layout, layoutIndex)
+    return 
+    {
+        StartingPosition = vector.new(0, 0 + layoutIndex, 0), --TODO(DG): calculate real position from blueprint
+        Layout = layout
+    }
 end
 
 local turtles = 

@@ -3,10 +3,8 @@ local memory =
     modemSide = "back",
     assainedWork = nil,
     redNetID = 1,
-    availableWork = 0,
-    maxAvailableWork = 10,
     facingDirection = nil,
-    digToolSide = ""
+    digToolSide = "",
 }
 
 function Init()
@@ -37,12 +35,27 @@ function AnalyzeMessage(message)
 end
 
 function Work()
-    ResetWorkTokens()
-    MoveToLocation(memory.assainedWork.startingPoint)
-    if memory.availableWork < 0 then
-        return
+    MoveToLocation(memory.assainedWork.StartingPosition)
+
+    for key, value in pairs(memory.assainedWork.Layout.CellMatrix) do
+    --cell are rapresented from left to right, 
+    --then to not destroy what placed we should do it from right to left  
+        local size = table.getn(value)
+        for key, value in pairs(Reverse(value)) do
+            local position = memory.assainedWork.StartingPosition
+            position.x = position.x + size - key - 1
+            MoveToLocation()
+            Face(RIGHT)
+            turtle.placeDown()     
+        end
+    end      
+end
+
+function Reverse(tab)
+    for i = 1, #tab//2, 1 do
+        tab[i], tab[#tab-i+1] = tab[#tab-i+1], tab[i]
     end
-    
+    return tab
 end
 
 function ResetWorkTokens()
