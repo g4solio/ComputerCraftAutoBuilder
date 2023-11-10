@@ -1,4 +1,4 @@
-local settings = 
+local memory = 
 {
     modemSide = "back",
     assainedWork = nil,
@@ -10,40 +10,46 @@ local settings =
 }
 
 function Init()
-    rednet.open(settings.modemSide)
+    rednet.open(memory.modemSide)
 end
 
 function Tick()
     local id,message = rednet.receive()
-    if id == settings.redNetID then
+    if id == memory.redNetID then
         AnalyzeMessage(message)
     end
-    if not settings.assainedWork == nil then
+    if not memory.assainedWork == nil then
         Work()
     end
 end
 
 function AnalyzeMessage(message)
     if message == "status" then 
-        if settings.assainedWork == nil then
+        if memory.assainedWork == nil then
             local response = "unassined" 
         else 
             local response = "working" 
         end
         rednet.send(0, response)
     else
-        settings.assainedWork = message
+        memory.assainedWork = message
     end     
 end
 
 function Work()
     ResetWorkTokens()
-   MoveToLocation(settings.assainedWork.startingPoint) 
+    MoveToLocation(memory.assainedWork.startingPoint)
+    if memory.availableWork < 0 then
+        return
+    end
+    
 end
 
 function ResetWorkTokens()
-    settings.availableWork = settings.maxAvailableWork
+    memory.availableWork = memory.maxAvailableWork
 end
+
+--#region Turtle move
 
 local RIGHT = 3 -- +x
 local LEFT = 1 -- -x
@@ -52,10 +58,10 @@ local BACKWARD = 2 -- -z
 
 -- https://www.reddit.com/r/ComputerCraft/comments/p01bse/turtle_to_player/
 function Face(direction)
-    if settings.facingDirection == nil then
+    if memory.facingDirection == nil then
         AcquireFaceDirection()
     end
-    local facingDirection = settings.facingDirection
+    local facingDirection = memory.facingDirection
     
     if facingDirection == direction then return end
     if (facingDirection + 1) % 4 == direction then
@@ -66,7 +72,7 @@ function Face(direction)
         turtle.turnRight()
         turtle.turnRight()
     end
-    settings.facingDirection = direction
+    memory.facingDirection = direction
 end
 
 function MoveToLocation(location)
@@ -90,15 +96,47 @@ function MoveToLocation(location)
         end
         MoveFoward(location.z - z)
     end
+    if location.y ~= y then
+        local direction = "down"
+        if location.y > y then
+            direction = "up"
+        end
+        MoveUpOrDown(direction, location.y - y)            
+    end
+    MoveToLocation(location)
+end
+
+function MoveUpOrDown(direction, length)
+    memory.availableWork = memory.availableWork - length
+    if length < 0 then
+        length = length * -1
+    end
+    for i = length,1,-1 do
+        if direction == "down" then
+            if turtle.detectDown() then
+                turtle.digDown(memory.digToolSide)
+            end
+            turtle.down() 
+        else
+            if turtle.detectUp() then
+                turtle.digUp(memory.digToolSide)
+            end
+            turtle.up()
+        end
+    end
 end
 
 function MoveFoward(length)
+    memory.availableWork = memory.availableWork - length
+    if length < 0 then
+        length = length * -1
+    end
     for i = length,1,-1 do
         if turtle.detect() then
-            turtle.dig(settings.digToolSide)
+            turtle.dig(memory.digToolSide)
         end
         turtle.forward()
     end
 end
-
+--#endregion
 
